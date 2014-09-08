@@ -6,26 +6,33 @@ Blind = {'C111507D';'C111907L';'D010908G';'E011108K';'E122007P';'M012108K';
 subjects = [Control; Blind];
 hemi = {'lh' 'rh'};
 datadir = '/jet/aguirre/abock/Semantic_Decoding';
+savedir = '~/data/Semantic_Decoding'; % can't write to datadir
+comparison = 
 %% Plot on surface
 progBar = ProgressBar(length(subjects),'plotting on surface');
+%ct=0;
 for s = 1:length(subjects)
     dir = fullfile(datadir,subjects{s});
     cd(dir)
     if exist('./searchlight_results_2_conditions_aud_tac.mat','file')
-            for hh = 1:length(hemi)
-                [~,~] = system(['mri_vol2surf --mov ./searchlight_results.nii.gz ' ...
-                    '--reg ./bbreg.dat --hemi ' hemi{hh} ' --projfrac 0.5 ' ...
-                    '--o ./' hemi{hh} '_searchlight_total_perf_surf.nii.gz']);
-                [~,~] = system(['mri_surf2surf --srcsubject ' subjects{s} ...
-                    ' --sval ./' hemi{hh} '_searchlight_total_perf_surf.nii.gz' ...
-                    ' --trgsubject fsaverage_sym --hemi ' hemi{hh} ' --tval ./' ...
-                    hemi{hh} '_searchlight_total_perf_fssymsurf.nii.gz']);
-            end
+        %        disp(dir);
+        %        ct = ct+1;
+        for hh = 1:length(hemi)
+            [~,~] = system(['mri_vol2surf --mov ./searchlight_results.nii.gz ' ...
+                '--reg ./bbreg.dat --hemi ' hemi{hh} ' --projfrac 0.5 ' ...
+                '--o ./' hemi{hh} '_searchlight_total_perf_surf.nii.gz']);
+            [~,~] = system(['mri_surf2surf --srcsubject ' subjects{s} ...
+                ' --sval ./' hemi{hh} '_searchlight_total_perf_surf.nii.gz' ...
+                ' --trgsubject fsaverage_sym --hemi ' hemi{hh} ' --tval ./' ...
+                hemi{hh} '_searchlight_total_perf_fssymsurf.nii.gz']);
+        end
     end
     progBar(s);
 end
+%disp(ct);
 %% Average across groups
-progBar = ProgressBar(length(hemi),'averaging...');
+%% Control
+progBar = ProgressBar(length(hemi),'Averaging Controls...');
 for hh = 1:length(hemi)
     % Controls
     clear tmp
@@ -40,8 +47,12 @@ for hh = 1:length(hemi)
     end
     avg_surf = mean(tmp_surf,2);
     tmp.vol = avg_surf;
-    save_nifti(tmp,fullfile(datadir,[hemi{hh} '_total_perf_avg_Control.nii.gz'])); % Control
-    % Blind
+    save_nifti(tmp,fullfile(savedir,[hemi{hh} '_total_perf_avg_Control.nii.gz'])); % Control
+    progBar(hh);
+end
+%% Blind
+progBar = ProgressBar(length(hemi),'Averaging Blind...');
+for hh = 1:length(hemi)
     clear tmp
     tmp_surf = [];
     for b = 1:length(Blind)
@@ -54,10 +65,10 @@ for hh = 1:length(hemi)
     end
     avg_surf = mean(tmp_surf,2);
     tmp.vol = avg_surf;
-    save_nifti(tmp,fullfile(datadir,[hemi{hh} '_total_perf_avg_Blind.nii.gz'])); % Blind
+    save_nifti(tmp,fullfile(savedir,[hemi{hh} '_total_perf_avg_Blind.nii.gz'])); % Blind
     progBar(hh);
 end
-%%
+%% Check results of classification
 for s = 1:length(subjects)
     clear searchlight_results ind
     dir = fullfile(datadir,subjects{s});

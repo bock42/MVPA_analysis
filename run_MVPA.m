@@ -141,11 +141,14 @@ ind.adj_sphere = subj.adj_sphere;
 nii = load_nifti(fullfile(subjDir,'fgm.nii.gz'));
 ind.gm = find(nii.vol);
 nii.vol(ind.gm) = cat(1,searchlight_results(:).total_perf);
-save_nifti(nii,fullfile(subjDir,'searchlight_results.nii.gz'));
 if conditions == 2
+    save_nifti(nii,fullfile(subjDir,['searchlight_results_' num2str(conditions) ...
+        '_conditions_' pairwise '.nii.gz']));
     save(fullfile(subjDir,['searchlight_results_' num2str(conditions) ...
         '_conditions_' pairwise]),'searchlight_results','ind');
 else
+    save_nifti(nii,fullfile(subjDir,['searchlight_results_' num2str(conditions) ...
+        '_conditions.nii.gz']));
     save(fullfile(subjDir,['searchlight_results_' num2str(conditions) ...
         '_conditions']),'searchlight_results','ind');
 end
